@@ -1,1 +1,44 @@
+name: Android APK ve AAB Olustur
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python Kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Gerekli Paketleri Yukle
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev libgstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good openjdk-17-jdk unzip zip
+          pip install --upgrade pip
+          pip install buildozer cython==0.29.33
+
+      - name: Buildozer Ayar Dosyasi Olustur
+        run: |
+          buildozer init
+          sed -i 's/title = My Application/title = Kurum Bulucu/g' buildozer.spec
+          sed -i 's/package.name = myapp/package.name = kurumbulucu/g' buildozer.spec
+
+      - name: APK Olustur
+        run: buildozer -v android debug
+
+      - name: AAB Olustur (Play Store Icin)
+        run: buildozer -v android release
+
+      - name: Dosyalari Indirilebilir Yap
+        uses: actions/upload-artifact@v4
+        with:
+          name: KurumBulucu-APK-ve-AAB
+          path: bin/*
 
